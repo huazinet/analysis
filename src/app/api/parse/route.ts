@@ -63,10 +63,8 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
   switch (platform) {
     case 'douyin':
       if (response.data?.url) {
-        // 对抖音视频URL进行特殊处理
-        const videoUrl = response.data.url;
-        // 移除查询参数并确保使用https
-        result.data!.url = videoUrl.replace('http://', 'https://').split('?')[0];
+        // 只确保使用https，保留查询参数
+        result.data!.url = response.data.url.replace('http://', 'https://');
       } else if (response.data?.images) {
         // 确保所有图片URL使用https
         result.data!.images = response.data.images.map((img: string) =>
@@ -100,11 +98,15 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
     case 'pipix':
     case 'qishui':
       if (response.data?.url) {
-        const videoUrl = response.data.url;
-        // 移除查询参数，确保使用https，并添加必要的请求头
-        result.data!.url = videoUrl
-          .replace('http://', 'https://')
-          .split('?')[0];
+        // 只确保使用https，保留查询参数
+        result.data!.url = response.data.url.replace('http://', 'https://');
+      }
+      break;
+      const videoUrl = response.data.url;
+      // 移除查询参数，确保使用https，并添加必要的请求头
+      result.data!.url = videoUrl
+        .replace('http://', 'https://')
+        .split('?')[0];
       }
       break;
   }

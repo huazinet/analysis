@@ -159,8 +159,13 @@ export default function Home() {
               preload="metadata"
               playsInline
               onError={(e) => {
-                console.error('Video load error:', e);
                 const video = e.target as HTMLVideoElement;
+                console.error('Video load error:', {
+                  error: e,
+                  videoSrc: video.src,
+                  errorCode: video.error?.code,
+                  errorMessage: video.error?.message
+                });
                 // 尝试添加跨域属性
                 if (!video.hasAttribute('crossorigin')) {
                   video.setAttribute('crossorigin', 'anonymous');
