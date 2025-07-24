@@ -61,7 +61,12 @@ export default function Home() {
 
   const downloadFile = async (url: string, filename: string) => {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': new URL(url).origin
+        }
+      });
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -180,6 +185,7 @@ export default function Home() {
                   className="w-full h-64 object-cover cursor-zoom-in transition-transform hover:scale-105"
                   onClick={() => setSelectedImage(img)}
                   loading="lazy"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     console.error('Image load error:', e);
                     const target = e.target as HTMLImageElement;
@@ -213,7 +219,7 @@ export default function Home() {
                 src={selectedImage}
                 alt="预览图片"
                 className="max-w-full max-h-full object-contain"
-                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
               />
               <button
                 className="absolute top-4 right-4 text-white text-xl"
