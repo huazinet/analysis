@@ -16,6 +16,9 @@ interface ParseResult {
   };
 }
 
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 export default function Home() {
   const [url, setUrl] = useState('');
   const [result, setResult] = useState<ParseResult | null>(null);
@@ -135,59 +138,85 @@ export default function Home() {
     const { data } = result;
     if (!data) return null;
 
+    // 构建Markdown内容
+    const buildMarkdownContent = () => {
+      let content = '';
+      
+      // 添加媒体信息
+      if (data.author) content += `**作者：** ${data.author}\n\n`;
+      if (data.title) content += `**标题：** ${data.title}\n\n`;
+      if (data.description) content += `**描述：** ${data.description}\n\n`;
+
+      // 添加视频
+      if (data.url || data.quality_urls) {
+        const videoUrl = data.url || Object.values(data.quality_urls || {})[0];
+        content += `\n<video src="${videoUrl}" controls style="max-width: 100%; border-radius: 8px;"></video>\n\n`;
+      }
+
+      // 添加图片
+      if (data.images || data.imgurl) {
+        const images = data.images || data.imgurl || [];
+        content += '\n### 图片集\n\n';
+        images.forEach((img: string, index: number) => {
+          content += `![图片 ${index + 1}](${img})\n\n`;
+        });
+      }
+
+      return content;
+    };
+
     return (
       <div className="mt-4">
-        {renderMediaInfo()}
-        
-        {/* 视频展示 */}
-        {(data.url || data.quality_urls) && (
-          <div className="mt-4">
-            <video
-              src={data.url || Object.values(data.quality_urls || {})[0]}
-              controls
-              className="max-w-full rounded-lg shadow-lg"
-            />
-          </div>
-        )}
-
-        {/* 图集展示 */}
-        {(data.images || data.imgurl) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(data.images || data.imgurl || []).map((img: string, index: number) => (
-              <div key={index} className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <img
-                  src={img}
-                  alt={`图片 ${index + 1}`}
-                  className="w-full h-64 object-cover cursor-zoom-in transition-transform hover:scale-105"
-                  onClick={() => setSelectedImage(img)}
-                  crossOrigin="anonymous"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <div className="prose prose-lg max-w-none">
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              img: ({node, ...props}) => (
+                <div className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                  <img
+                    {...props}
+                    className="w-full h-64 object-cover cursor-zoom-in transition-transform hover:scale-105"
+                    onClick={() => setSelectedImage(props.src || null)}
+                    loading="lazy"
+                    crossOrigin="anonymous"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (props.src) downloadFile(props.src, `image-${Date.now()}.jpg`);
+                      }}
+                      className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                    >
+                      下载
+                    </button>
+                  </div>
+                </div>
+              ),
+              video: ({node, ...props}) => (
+                <div className="relative">
+                  <video
+                    {...props}
+                    className="max-w-full rounded-lg shadow-lg"
+                    controls
+                    crossOrigin="anonymous"
+                    preload="metadata"
+                  />
                   <button
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      downloadFile(img, `image-${index + 1}.jpg`);
+                    onClick={() => {
+                      if (props.src) downloadFile(props.src, `video-${Date.now()}.mp4`);
                     }}
-                    className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
-                    下载
+                    下载视频
                   </button>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 批量下载按钮 */}
-        {(data.url || data.images || data.imgurl || data.quality_urls) && (
-          <button
-            onClick={downloadAllMedia}
-            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              )
+            }}
           >
-            下载所有素材
-          </button>
-        )}
+            {buildMarkdownContent()}
+          </ReactMarkdown>
+        </div>
 
         {/* 图片预览模态框 */}
         {selectedImage && (
@@ -200,6 +229,7 @@ export default function Home() {
                 src={selectedImage}
                 alt="预览图片"
                 className="max-w-full max-h-full object-contain"
+                crossOrigin="anonymous"
               />
               <button
                 className="absolute top-4 right-4 text-white text-xl"
