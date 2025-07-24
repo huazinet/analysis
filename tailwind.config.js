@@ -12,5 +12,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [], // 移除typography插件
 }

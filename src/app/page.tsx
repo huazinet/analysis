@@ -140,7 +140,8 @@ export default function Home() {
 
     return (
       <div className="mt-4">
-        {renderMediaInfo()}
+        <div className="max-w-none"> {/* 移除prose相关类名 */}
+          {renderMediaInfo()}
         
         {/* 视频展示 */}
         {(data.url || data.quality_urls) && (
