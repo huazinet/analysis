@@ -15,6 +15,11 @@ const nextConfig = {
       },
     ];
   },
+  // 添加SWC配置
+  swcMinify: true,
+  compiler: {
+    styledComponents: true,
+  },
 };
 
 module.exports = nextConfig;
