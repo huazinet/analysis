@@ -15,6 +15,19 @@ const nextConfig = {
       },
     ];
   },
+  // 添加图片和视频域名配置
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.douyin.com' },
+      { protocol: 'https', hostname: '*.douyinvod.com' },
+      { protocol: 'https', hostname: '*.douyinpic.com' },
+      { protocol: 'https', hostname: '*.xiaohongshu.com' },
+      { protocol: 'https', hostname: '*.bilibili.com' },
+      { protocol: 'https', hostname: '*.weibo.com' },
+      { protocol: 'https', hostname: '*.pipix.com' },
+      { protocol: 'https', hostname: '*.qishui.com' },
+    ],
+  },
   // 添加SWC配置
   swcMinify: true,
   compiler: {
