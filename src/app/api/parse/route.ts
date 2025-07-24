@@ -104,32 +104,7 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
       break;
   }
 
-  // 验证媒体URL的可访问性
-  if (result.data?.url) {
-    try {
-      const response = await fetch(result.data.url, {
-        method: 'HEAD',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://www.douyin.com/',
-        },
-      });
-      if (!response.ok) {
-        return {
-          code: 400,
-          msg: '媒体资源不可访问',
-        };
-      }
-    } catch (error) {
-      console.error('Media access error:', error);  // 删除重复的这一行
-      return {
-        code: 400,
-        msg: '媒体资源不可访问',
-      };
-    }
-  }
-
-  return result;
+  return result; // 直接返回结果，移除媒体URL验证
 }
 
 export async function POST(request: NextRequest) {
