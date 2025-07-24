@@ -198,31 +198,138 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">在线视频解析</h1>
+    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-900 text-center mb-12">在线视频解析</h1>
         
-        <div className="flex gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <input
             type="text"
             value={url}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
             placeholder="请输入视频链接（支持自动识别平台）"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
           />
           <button
             onClick={handleParse}
             disabled={loading}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm hover:shadow-md"
           >
             {loading ? '解析中...' : '开始解析'}
           </button>
         </div>
 
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-        {renderResult()}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-center">
+            {error}
+          </div>
+        )}
 
-        <div className="mt-8 text-center text-gray-500">
+        {result?.data && (
+          <div className="space-y-6">
+            {/* 媒体信息卡片 */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-3">
+              {result.data.author && (
+                <p className="text-gray-800">
+                  <span className="font-medium">作者：</span>
+                  {result.data.author}
+                </p>
+              )}
+              {result.data.title && (
+                <p className="text-gray-800">
+                  <span className="font-medium">标题：</span>
+                  {result.data.title}
+                </p>
+              )}
+              {result.data.description && (
+                <p className="text-gray-800">
+                  <span className="font-medium">描述：</span>
+                  {result.data.description}
+                </p>
+              )}
+            </div>
+
+            {/* 视频播放器 */}
+            {(result.data.url || result.data.quality_urls) && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <video
+                  src={result.data.url || Object.values(result.data.quality_urls || {})[0]}
+                  controls
+                  className="w-full rounded-lg"
+                  crossOrigin="anonymous"
+                  playsInline
+                />
+              </div>
+            )}
+
+            {/* 图集展示 */}
+            {(result.data.images || result.data.imgurl) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {(result.data.images || result.data.imgurl || []).map((img: string, index: number) => (
+                  <div key={index} className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <img
+                      src={img}
+                      alt={`图片 ${index + 1}`}
+                      className="w-full h-64 object-cover cursor-zoom-in transition-transform hover:scale-105"
+                      onClick={() => setSelectedImage(img)}
+                      crossOrigin="anonymous"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <a
+                        href={img}
+                        download={`image-${index + 1}.jpg`}
+                        className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        下载
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 批量下载按钮 */}
+            {(result.data.url || result.data.images || result.data.imgurl || result.data.quality_urls) && (
+              <div className="text-center">
+                <button
+                  onClick={downloadAllMedia}
+                  className="px-8 py-3 bg-green-600 text-white rounded-xl font-medium hover:bg-green-700 transition-colors shadow-sm hover:shadow-md"
+                >
+                  下载所有素材
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 图片预览模态框 */}
+        {selectedImage && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="relative max-w-5xl max-h-[90vh]">
+              <img
+                src={selectedImage}
+                alt="预览图片"
+                className="max-w-full max-h-full object-contain rounded-lg"
+                crossOrigin="anonymous"
+              />
+              <button
+                className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full text-gray-800 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedImage(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-12 text-center text-gray-500 border-t border-gray-100 pt-8">
           <p>支持平台：抖音、小红书、哔哩哔哩、微博、皮皮虾、汽水音乐</p>
         </div>
       </div>

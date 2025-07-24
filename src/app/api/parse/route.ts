@@ -15,12 +15,12 @@ interface ParseResult {
 }
 
 const PLATFORM_APIS = {
-  douyin: 'https://jx.16.do/api/douyin.php',
-  xiaohongshu: 'https://jx.16.do/api/xhsjx.php',
-  bilibili: 'https://jx.16.do/api/bilibili.php',
-  weibo: 'https://jx.16.do/api/weibo.php',
-  pipix: 'https://jx.16.do/api/ppxia.php',
-  qishui: 'https://jx.16.do/api/qsmusic.php',
+  douyin: process.env.DOUYIN_API,
+  xiaohongshu: process.env.XIAOHONGSHU_API,
+  bilibili: process.env.BILIBILI_API,
+  weibo: process.env.WEIBO_API,
+  pipix: process.env.PIPIX_API,
+  qishui: process.env.QISHUI_API,
 } as const;
 
 type Platform = keyof typeof PLATFORM_APIS;
@@ -111,8 +111,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ code: 400, msg: '不支持的平台或链接格式不正确' });
     }
 
-    const apiUrl = `${PLATFORM_APIS[platform]}?url=${encodeURIComponent(url)}`;
-    const response = await fetch(apiUrl);
+    const apiUrl = PLATFORM_APIS[platform];
+    if (!apiUrl) {
+      return NextResponse.json({ code: 500, msg: '接口配置错误' });
+    }
+
+    const response = await fetch(`${apiUrl}?url=${encodeURIComponent(url)}`);
     const data = await response.json();
 
     const result = await processApiResponse(platform, data);
