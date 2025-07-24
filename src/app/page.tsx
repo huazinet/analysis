@@ -253,11 +253,19 @@ export default function Home() {
             {(result.data.url || result.data.quality_urls) && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <video
+                  key={result.data.url || Object.values(result.data.quality_urls || {})[0]} // 添加key以强制重新加载
                   src={result.data.url || Object.values(result.data.quality_urls || {})[0]}
                   controls
                   className="w-full rounded-lg"
                   crossOrigin="anonymous"
                   playsInline
+                  preload="metadata"
+                  onError={(e) => {
+                    const target = e.target as HTMLVideoElement;
+                    if (target.error) {
+                      setError(`视频加载失败：${target.error.message}`);
+                    }
+                  }}
                 />
               </div>
             )}

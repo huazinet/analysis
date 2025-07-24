@@ -63,7 +63,10 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
   switch (platform) {
     case 'douyin':
       if (response.data?.url) {
-        result.data!.url = response.data.url;
+        // 对抖音视频URL进行特殊处理
+        const videoUrl = response.data.url;
+        result.data!.url = videoUrl.includes('?') ? 
+          videoUrl.split('?')[0] : videoUrl;
       } else if (response.data?.images) {
         result.data!.images = response.data.images;
       }
@@ -72,6 +75,8 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
     case 'xiaohongshu':
       if (response.data?.imgurl) {
         result.data!.imgurl = response.data.imgurl;
+      } else if (response.data?.url) {
+        result.data!.url = response.data.url;
       }
       break;
 
@@ -84,15 +89,39 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
     case 'weibo':
       if (response.data?.quality_urls) {
         result.data!.quality_urls = response.data.quality_urls;
+      } else if (response.data?.url) {
+        result.data!.url = response.data.url;
       }
       break;
 
     case 'pipix':
     case 'qishui':
       if (response.data?.url) {
-        result.data!.url = response.data.url;
+        // 移除URL中的查询参数
+        const videoUrl = response.data.url;
+        result.data!.url = videoUrl.includes('?') ? 
+          videoUrl.split('?')[0] : videoUrl;
       }
       break;
+  }
+
+  // 验证媒体URL的可访问性
+  if (result.data?.url) {
+    try {
+      const response = await fetch(result.data.url, { method: 'HEAD' });
+      if (!response.ok) {
+        return {
+          code: 400,
+          msg: '媒体资源不可访问',
+        };
+      }
+    } catch (error) {
+      console.error('Media access error:', error);
+      return {
+        code: 400,
+        msg: '媒体资源不可访问',
+      };
+    }
   }
 
   return result;
