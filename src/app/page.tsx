@@ -55,6 +55,23 @@ export default function Home() {
     }
   };
 
+  const downloadFile = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      setError('下载失败，请稍后重试');
+    }
+  };
+
   const downloadAllMedia = async () => {
     if (!result?.data) return;
 
@@ -73,14 +90,11 @@ export default function Home() {
     }
 
     // 下载所有文件
-    urls.forEach((url, index) => {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `media-${index + 1}${url.includes('.mp4') ? '.mp4' : '.jpg'}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
+    for (let i = 0; i < urls.length; i++) {
+      const url = urls[i];
+      const ext = url.includes('.mp4') ? '.mp4' : '.jpg';
+      await downloadFile(url, `media-${i + 1}${ext}`);
+    }
   };
 
   const renderMediaInfo = () => {
@@ -138,27 +152,30 @@ export default function Home() {
 
         {/* 图集展示 */}
         {(data.images || data.imgurl) && (
-          <div className="mt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {(data.images || data.imgurl || []).map((img: string, index: number) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={img}
-                    alt={`图片 ${index + 1}`}
-                    className="w-full rounded-lg shadow-lg cursor-pointer transition-transform hover:scale-105"
-                    onClick={() => setSelectedImage(img)}
-                  />
-                  <a
-                    href={img}
-                    download={`image-${index + 1}.jpg`}
-                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(data.images || data.imgurl || []).map((img: string, index: number) => (
+              <div key={index} className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <img
+                  src={img}
+                  alt={`图片 ${index + 1}`}
+                  className="w-full h-64 object-cover cursor-zoom-in transition-transform hover:scale-105"
+                  onClick={() => setSelectedImage(img)}
+                  crossOrigin="anonymous"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <button
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      downloadFile(img, `image-${index + 1}.jpg`);
+                    }}
+                    className="bg-white text-gray-800 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                   >
-                    <span className="text-white">下载</span>
-                  </a>
+                    下载
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -220,7 +237,7 @@ export default function Home() {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-center">
+          <div className="mb-6 p-4 bg-red-500 border border-red-200 rounded-xl text-red-600 text-center">
             {error}
           </div>
         )}

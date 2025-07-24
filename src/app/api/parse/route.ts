@@ -65,18 +65,21 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
       if (response.data?.url) {
         // 对抖音视频URL进行特殊处理
         const videoUrl = response.data.url;
-        result.data!.url = videoUrl.includes('?') ? 
-          videoUrl.split('?')[0] : videoUrl;
+        // 移除查询参数并确保使用https
+        result.data!.url = videoUrl.replace('http://', 'https://').split('?')[0];
       } else if (response.data?.images) {
-        result.data!.images = response.data.images;
+        // 确保所有图片URL使用https
+        result.data!.images = response.data.images.map((img: string) =>
+          img.replace('http://', 'https://'));
       }
       break;
 
     case 'xiaohongshu':
       if (response.data?.imgurl) {
-        result.data!.imgurl = response.data.imgurl;
+        result.data!.imgurl = response.data.imgurl.map((img: string) =>
+          img.replace('http://', 'https://'));
       } else if (response.data?.url) {
-        result.data!.url = response.data.url;
+        result.data!.url = response.data.url.replace('http://', 'https://');
       }
       break;
 
@@ -97,10 +100,11 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
     case 'pipix':
     case 'qishui':
       if (response.data?.url) {
-        // 移除URL中的查询参数
         const videoUrl = response.data.url;
-        result.data!.url = videoUrl.includes('?') ? 
-          videoUrl.split('?')[0] : videoUrl;
+        // 移除查询参数，确保使用https，并添加必要的请求头
+        result.data!.url = videoUrl
+          .replace('http://', 'https://')
+          .split('?')[0];
       }
       break;
   }
@@ -108,7 +112,13 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
   // 验证媒体URL的可访问性
   if (result.data?.url) {
     try {
-      const response = await fetch(result.data.url, { method: 'HEAD' });
+      const response = await fetch(result.data.url, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://www.douyin.com/',
+        },
+      });
       if (!response.ok) {
         return {
           code: 400,
