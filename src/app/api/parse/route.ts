@@ -128,7 +128,7 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
         };
       }
     } catch (error) {
-      console.error('Media access error:', error);
+      console.error('Media access error:', error);  // 删除重复的这一行
       return {
         code: 400,
         msg: '媒体资源不可访问',
