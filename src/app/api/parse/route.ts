@@ -102,7 +102,7 @@ async function processApiResponse(platform: Platform, response: any): Promise<Pa
         result.data!.url = response.data.url.replace('http://', 'https://');
       }
       break;
-      const videoUrl = response.data.url;
+      const videoUrl = response.data.url;  // 这段代码是多余的，需要删除
       // 移除查询参数，确保使用https，并添加必要的请求头
       result.data!.url = videoUrl
         .replace('http://', 'https://')
